@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from routes.user import user
+from mangum import Mangum
 """
 This module includes the FastAPI application configuration and router inclusion.
 
@@ -31,3 +32,5 @@ app = FastAPI()
 # Note:
 # The user router is included in the FastAPI application to make the user-related endpoints accessible.
 app.include_router(user)
+
+handler = Mangum(app)

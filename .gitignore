@@ -1,2 +1,16 @@
-.env
-fastenv
+# Entorno virtual de Python
+*env/
+venv/
+.venv/
+env/
+ENV/
+
+# Archivos generados por Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Otros archivos innecesarios
+*.log
+*.sqlite3
+*.env

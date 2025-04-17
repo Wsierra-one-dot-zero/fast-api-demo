@@ -14,6 +14,9 @@ __pycache__/
 *.log
 *.sqlite3
 *.env
+.aws-sam
+*.toml
 
 # Dependencias
 package
+login-rol.sh

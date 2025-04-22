@@ -1,0 +1,39 @@
+name: Deploy with OIDC
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  id-token: write   # Necesario para OIDC
+  contents: read    # Para clonar el repo
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
+          aws-region: us-east-1
+
+      - name: Install SAM CLI
+        run: pip install aws-sam-cli
+
+      - name: Sam Build Project
+        run: |
+          sam build
+
+      - name: Sam Deploy Project
+        run: |
+          sam deploy \
+            --stack-name Fast-api-demo-stack \
+            --region us-east-1 \
+            --capabilities CAPABILITY_IAM \
+            --parameter-overrides StageName=Demo \
+            --no-confirm-changeset False\

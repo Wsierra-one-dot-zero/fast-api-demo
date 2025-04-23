@@ -1,10 +1,5 @@
 pipeline {
-    agent {
-        docker {
-            image 'public.ecr.aws/sam/build-python3.12:latest'  // Imagen oficial de AWS SAM
-            args '-v /var/run/docker.sock:/var/run/docker.sock'  // Necesario para builds con Docker
-        }
-    }
+    agent any
 
     environment {
         AWS_REGION = 'us-east-1'
@@ -68,6 +63,9 @@ pipeline {
     }
 
     post {
+        always {
+            cleanWs()  // Limpia el workspace al finalizar
+        }
         success {
             slackSend channel: '#devops',
                      message: "✅ Despliegue exitoso: ${env.JOB_NAME} (#${env.BUILD_NUMBER})"

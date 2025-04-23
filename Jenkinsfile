@@ -1,7 +1,7 @@
 pipeline {
     agent {
         docker {
-            image 'amazon/aws-sam-cli:latest'  // Imagen oficial de AWS SAM
+            image 'public.ecr.aws/sam/build-python3.12:latest'  // Imagen oficial de AWS SAM
             args '-v /var/run/docker.sock:/var/run/docker.sock'  // Necesario para builds con Docker
         }
     }

@@ -66,13 +66,5 @@ pipeline {
         always {
             cleanWs()  // Limpia el workspace al finalizar
         }
-        success {
-            slackSend channel: '#devops',
-                     message: "✅ Despliegue exitoso: ${env.JOB_NAME} (#${env.BUILD_NUMBER})"
-        }
-        failure {
-            slackSend channel: '#devops',
-                     message: "❌ Falló el despliegue: ${env.JOB_NAME} (#${env.BUILD_NUMBER})"
-        }
     }
 }

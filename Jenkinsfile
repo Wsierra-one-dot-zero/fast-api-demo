@@ -23,11 +23,6 @@ pipeline {
             steps {
                 script {
                     sh '''
-                        RED='\033[0;31m'
-                        GREEN='\033[0;32m'
-                        YELLOW='\033[1;33m'
-                        NC='\033[0m' # No Color
-
                         ASSUME_ROLE_OUTPUT=$(aws sts assume-role \
                             --role-arn "${parameters.AWS_ROL_ARN}" \
                             --role-session-name "Rol_from_Jenkins" \
@@ -36,7 +31,7 @@ pipeline {
                             --output json 2>&1)
 
                         if [ $? -ne 0 ]; then
-                            echo -e "${RED}Error al asumir el rol:${NC}"
+                            echo "Error al asumir el rol:"
                             echo "$ASSUME_ROLE_OUTPUT"
                             exit 1
                         fi
@@ -51,10 +46,10 @@ pipeline {
                         export AWS_SESSION_TOKEN
                         export AWS_DEFAULT_REGION=us-east-1
 
-                        echo -e "${GREEN}Credenciales temporales configuradas con éxito!${NC}"
+                        echo "Credenciales temporales configuradas con éxito!"
 
-                        echo -e "${GREEN}Ahora puedes usar los comandos de AWS CLI con el rol asumido.${NC}"
-                        echo -e "${YELLOW}Estas credenciales son temporales y solo durarán hasta la expiración.${NC}"
+                        echo "Ahora puedes usar los comandos de AWS CLI con el rol asumido."
+                        echo "Estas credenciales son temporales y solo durarán hasta la expiración."
                     '''
                 }
             }

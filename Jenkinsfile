@@ -20,40 +20,35 @@ pipeline {
 
         // Etapa 2: Configurar AWS (OIDC o Access Keys)
         stage('Configure AWS') {
-            steps {
-                script {
-                    sh '''
-                        ASSUME_ROLE_OUTPUT=$(aws sts assume-role \
-                            --role-arn "${parameters.AWS_ROL_ARN}" \
-                            --role-session-name "Rol_from_Jenkins" \
-                            --duration-seconds "3600" \
-                            --profile "default" \
-                            --output json 2>&1)
+    steps {
+        script {
+            sh(script: """
+                #!/bin/bash
+                set -e
 
-                        if [ $? -ne 0 ]; then
-                            echo "Error al asumir el rol:"
-                            echo "$ASSUME_ROLE_OUTPUT"
-                            exit 1
-                        fi
+                ASSUME_ROLE_OUTPUT=\$(aws sts assume-role \
+                    --role-arn "${params.AWS_ROL_ARN}" \
+                    --role-session-name "Rol_from_Jenkins" \
+                    --duration-seconds "3600" \
+                    --output json 2>&1)
 
-                        AWS_ACCESS_KEY_ID=$(echo "$ASSUME_ROLE_OUTPUT" | jq -r '.Credentials.AccessKeyId')
-                        AWS_SECRET_ACCESS_KEY=$(echo "$ASSUME_ROLE_OUTPUT" | jq -r '.Credentials.SecretAccessKey')
-                        AWS_SESSION_TOKEN=$(echo "$ASSUME_ROLE_OUTPUT" | jq -r '.Credentials.SessionToken')
-                        EXPIRATION=$(echo "$ASSUME_ROLE_OUTPUT" | jq -r '.Credentials.Expiration')
+                if [ \$? -ne 0 ]; then
+                    echo "Error al asumir el rol:"
+                    echo "\$ASSUME_ROLE_OUTPUT"
+                    exit 1
+                fi
 
-                        export AWS_ACCESS_KEY_ID
-                        export AWS_SECRET_ACCESS_KEY
-                        export AWS_SESSION_TOKEN
-                        export AWS_DEFAULT_REGION=us-east-1
+                export AWS_ACCESS_KEY_ID=\$(echo "\$ASSUME_ROLE_OUTPUT" | jq -r '.Credentials.AccessKeyId')
+                export AWS_SECRET_ACCESS_KEY=\$(echo "\$ASSUME_ROLE_OUTPUT" | jq -r '.Credentials.SecretAccessKey')
+                export AWS_SESSION_TOKEN=\$(echo "\$ASSUME_ROLE_OUTPUT" | jq -r '.Credentials.SessionToken')
+                export AWS_DEFAULT_REGION=us-east-1
 
-                        echo "Credenciales temporales configuradas con éxito!"
-
-                        echo "Ahora puedes usar los comandos de AWS CLI con el rol asumido."
-                        echo "Estas credenciales son temporales y solo durarán hasta la expiración."
-                    '''
-                }
-            }
+                echo "Credenciales temporales configuradas con éxito!"
+            """, shell: 'bash')
         }
+    }
+}
+
 
         // Etapa 3: Instalar SAM CLI
         stage('Install SAM CLI') {

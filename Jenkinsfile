@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    parameters {
+        string(name: 'AWS_ROL_ARN', defaultValue: '', description: 'AWS ROL')
+    }
+
     environment {
         AWS_REGION = 'us-east-1'
         STACK_NAME = 'fastapi-stack'
@@ -18,10 +22,45 @@ pipeline {
         stage('Configure AWS') {
             steps {
                 script {
-                    // Opción A: Usar OIDC (requiere plugin "AWS Credentials" y configuración previa)
-                    withAWS(role: 'arn:aws:iam::111383061799:role/github-actions-role', roleAccount: '111383061799', region: env.AWS_REGION) {
-                        // Tus comandos AWS aquí
-                    }
+                    ##asumir un rol de AWS
+
+                    # Colores para la salida
+                    RED='\033[0;31m'
+                    GREEN='\033[0;32m'
+                    YELLOW='\033[1;33m'
+                    NC='\033[0m' # No Color
+
+                    # Asumir el rol
+                    ASSUME_ROLE_OUTPUT=$(aws sts assume-role \
+                        --role-arn "${parameters.AWS_ROL_ARN}" \
+                        --role-session-name "Rol_from_Jenkins" \
+                        --duration-seconds "3600" \
+                        --profile "default" \
+                        --output json 2>&1)
+
+                    # Verificar si el comando falló
+                    if [ $? -ne 0 ]; then
+                        echo -e "${RED}Error al asumir el rol:${NC}"
+                        echo "$ASSUME_ROLE_OUTPUT"
+                        exit 1
+                    fi
+
+                    # Extraer credenciales temporales
+                    AWS_ACCESS_KEY_ID=$(echo "$ASSUME_ROLE_OUTPUT" | jq -r '.Credentials.AccessKeyId')
+                    AWS_SECRET_ACCESS_KEY=$(echo "$ASSUME_ROLE_OUTPUT" | jq -r '.Credentials.SecretAccessKey')
+                    AWS_SESSION_TOKEN=$(echo "$ASSUME_ROLE_OUTPUT" | jq -r '.Credentials.SessionToken')
+                    EXPIRATION=$(echo "$ASSUME_ROLE_OUTPUT" | jq -r '.Credentials.Expiration')
+
+                    # Configurar variables de entorno
+                    export AWS_ACCESS_KEY_ID
+                    export AWS_SECRET_ACCESS_KEY
+                    export AWS_SESSION_TOKEN
+                    export AWS_DEFAULT_REGION=us-east-1
+
+                    echo -e "${GREEN}Credenciales temporales configuradas con éxito!${NC}"
+
+                    echo -e "${GREEN}Ahora puedes usar los comandos de AWS CLI con el rol asumido.${NC}"
+                    echo -e "${YELLOW}Estas credenciales son temporales y solo durarán hasta la expiración.${NC}"
                 }
             }
         }
@@ -30,36 +69,45 @@ pipeline {
         stage('Install SAM CLI') {
             steps {
                 sh '''
-                    pip install --upgrade aws-sam-cli
-                    sam --version
+                    aws s3 ls
                 '''
             }
         }
+
+        // Etapa 3: Instalar SAM CLI
+        //stage('Install SAM CLI') {
+        //     steps {
+        //         sh '''
+        //             pip install --upgrade aws-sam-cli
+        //             sam --version
+        //         '''
+        //     }
+        // }
 
         // Etapa 4: Build 
-        stage('Build') {
-            steps {
-                sh '''
-                    sam build
-                '''
-            }
-        }
+        // stage('Build') {
+        //     steps {
+        //         sh '''
+        //             sam build
+        //         '''
+        //     }
+        // }
 
         // Etapa 5: Deploy
-        stage('Build & Deploy') {
-            steps {
-                sh '''
-                    sam build
-                    sam deploy --stack-name ${STACK_NAME} \
-                        --region ${AWS_REGION} \
-                        --resolve-s3 \
-                        --capabilities CAPABILITY_IAM \
-                        --parameter-overrides StageName=Demo \
-                        --no-confirm-changeset \
-                        --no-fail-on-empty-changeset
-                '''
-            }
-        }
+        // stage('Build & Deploy') {
+        //     steps {
+        //         sh '''
+        //             sam build
+        //             sam deploy --stack-name ${STACK_NAME} \
+        //                 --region ${AWS_REGION} \
+        //                 --resolve-s3 \
+        //                 --capabilities CAPABILITY_IAM \
+        //                 --parameter-overrides StageName=Demo \
+        //                 --no-confirm-changeset \
+        //                 --no-fail-on-empty-changeset
+        //         '''
+        //     }
+        // }
     }
 
     post {

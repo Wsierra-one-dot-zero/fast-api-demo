@@ -14,7 +14,7 @@ pipeline {
         // Etapa 1: Checkout del código
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/Wsierra-one-dot-zero/fast-api-demo'
+                git branch: 'devops-jenkins', url: 'https://github.com/Wsierra-one-dot-zero/fast-api-demo'
             }
         }
 

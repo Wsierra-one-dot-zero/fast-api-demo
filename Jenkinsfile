@@ -1,5 +1,9 @@
 pipeline {
-    agent any
+    agent {
+        docker {
+            image 'myjenkins/aws-sam-cli-python'
+        }
+    }
 
     parameters {
         string(name: 'AWS_ROL_ARN', defaultValue: '', description: 'ARN del rol a asumir')

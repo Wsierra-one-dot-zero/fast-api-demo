@@ -8,6 +8,8 @@ pipeline {
     environment {
         AWS_REGION = 'us-east-1'
         STACK_NAME = 'fastapi-stack'
+        AWS_ACCESS_KEY_ID = credentials('aws-access-key')
+        AWS_SECRET_ACCESS_KEY = credentials('aws-secret-key')
     }
 
     stages {
@@ -51,10 +53,10 @@ pipeline {
 
 
         // Etapa 3: Instalar SAM CLI
-        stage('Install SAM CLI') {
+        stage('Test AWS Login') {
             steps {
                 sh '''
-                    aws s3 ls
+                    aws sts get-caller-identity
                 '''
             }
         }

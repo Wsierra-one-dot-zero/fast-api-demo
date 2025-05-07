@@ -3,6 +3,7 @@ FROM python:3.12-slim
 # Instala dependencias del sistema
 RUN apt-get update && \
     apt-get install -y \
+    git \
     curl \
     unzip \
     jq \
@@ -24,6 +25,7 @@ RUN pip install --upgrade aws-sam-cli
 RUN aws --version && \
     sam --version && \
     python --version && \
-    jq --version
+    jq --version && \
+    git --version
 
 ENTRYPOINT [ "bash" ]

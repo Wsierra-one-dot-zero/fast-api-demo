@@ -7,6 +7,7 @@ pipeline {
 
     environment {
         AWS_REGION = 'us-east-1'
+        STACK_NAME = 'fastapi-stack'
     }
 
     stages {
@@ -33,6 +34,41 @@ pipeline {
                         aws sts get-caller-identity
                     '''
                 }
+            }
+        }
+
+        // Etapa 3: Instalar SAM CLI
+        stage('Install SAM CLI') {
+            steps {
+                sh '''
+                    pip install --upgrade aws-sam-cli
+                    sam --version
+                '''
+            }
+        }
+
+        // Etapa 4: Build 
+        stage('Build') {
+            steps {
+                sh '''
+                    sam build
+                '''
+            }
+        }
+
+        // Etapa 5: Deploy
+        stage('Build & Deploy') {
+            steps {
+                sh '''
+                    sam build
+                    sam deploy --stack-name ${STACK_NAME} \
+                        --region ${AWS_REGION} \
+                        --resolve-s3 \
+                        --capabilities CAPABILITY_IAM \
+                        --parameter-overrides StageName=Demo \
+                        --no-confirm-changeset \
+                        --no-fail-on-empty-changeset
+                '''
             }
         }
     }
